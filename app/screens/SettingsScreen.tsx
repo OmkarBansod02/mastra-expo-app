@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Appbar, TextInput, Button, Divider, Text, Switch, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { loadMastraConfig, saveMastraConfig, MastraConfig } from '../utils/configStorage';
-import personalAssistantService from '../services/assistantService';
+import mastraAgentService from '../services/assistantService';
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -57,7 +57,7 @@ const SettingsScreen: React.FC = () => {
       await saveMastraConfig(config);
       
       // Refresh the Mastra client with new settings
-      await personalAssistantService.refreshClient();
+      await mastraAgentService.refreshClient();
       
       Alert.alert('Success', 'Settings saved successfully');
       navigation.goBack();

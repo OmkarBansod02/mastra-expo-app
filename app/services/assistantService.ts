@@ -1,6 +1,6 @@
 import { MastraClient } from '@mastra/client-js';
 import { log, logError } from '../utils/config';
-import { loadMastraConfig, MastraConfig } from '../utils/configStorage';
+import { loadMastraConfig } from '../utils/configStorage';
 
 export interface Message {
   id: string;
@@ -9,36 +9,29 @@ export interface Message {
   timestamp: Date;
 }
 
-// Initialize with null values, will be set when refreshClient is called
 let client: any = null;
 let agent: any = null;
 let isInitialized = false;
 
-const weatherAgentService = {
-  // Initialize the client and agent with current settings
+const mastraAgentService = {
   refreshClient: async (): Promise<boolean> => {
     try {
       const config = await loadMastraConfig();
-      log("Initializing Mastra client with config:", config);
       
       if (!config.baseUrl) {
-        logError("No Mastra URL configured");
         client = null;
         agent = null;
         isInitialized = false;
         return false;
       }
       
-      // Create new client with current settings
       client = new MastraClient({
         baseUrl: config.baseUrl,
       });
       
-      // Get the agent with current agent ID
       agent = client.getAgent(config.agentId);
       isInitialized = true;
       
-      log("Mastra client initialized successfully");
       return true;
     } catch (error) {
       logError("Error initializing Mastra client:", error);
@@ -50,11 +43,8 @@ const weatherAgentService = {
   },
   
   isConfigured: (): boolean => {
-    // If not yet initialized, try to initialize now
     if (!isInitialized) {
-      // We need to initialize but can't await in a sync function
-      // So we trigger the initialization asynchronously and return false for now
-      weatherAgentService.refreshClient()
+      mastraAgentService.refreshClient()
         .then((success) => {
           isInitialized = success;
         })
@@ -69,25 +59,24 @@ const weatherAgentService = {
   
   sendMessage: async (content: string): Promise<Message> => {
     try {
-      // Make sure client is initialized
       if (!isInitialized) {
-        await weatherAgentService.refreshClient();
+        await mastraAgentService.refreshClient();
         
         if (!agent) {
           throw new Error("Mastra client not properly configured");
         }
       }
       
-      log("Sending message to agent");
       const response = await agent.generate({
         messages: [
           { role: 'user', content }
         ]
       });
-      log("Response received:", response);
+      
       const responseText = typeof response === 'string' 
         ? response 
         : (response as any).text || JSON.stringify(response);
+      
       return {
         id: Date.now().toString(),
         role: 'assistant',
@@ -107,16 +96,14 @@ const weatherAgentService = {
 
   streamMessage: async (content: string, onChunk: (chunk: string) => void): Promise<Message> => {
     try {
-      // Make sure client is initialized
       if (!isInitialized) {
-        await weatherAgentService.refreshClient();
+        await mastraAgentService.refreshClient();
         
         if (!agent) {
           throw new Error("Mastra client not properly configured");
         }
       }
       
-      log("Streaming message to agent");
       let fullContent = '';
       let streamingSuccessful = false;
 
@@ -126,14 +113,11 @@ const weatherAgentService = {
             { role: 'user', content }
           ]
         });
-        log("Stream response received:", streamResponse ? 'valid response' : 'null response');
 
         if (streamResponse) {
           if (typeof streamResponse.processDataStream === 'function') {
-            log("Using processDataStream method");
             await streamResponse.processDataStream({
               onTextPart: (text: string) => {
-                log("Received text part:", text ? text.substring(0, 20) + '...' : 'empty');
                 if (text) {
                   fullContent += text;
                   onChunk(text);
@@ -145,7 +129,6 @@ const weatherAgentService = {
               }
             });
           } else if (streamResponse.body) {
-            log("Using response.body");
             const reader = streamResponse.body.getReader();
             const decoder = new TextDecoder();
 
@@ -154,28 +137,23 @@ const weatherAgentService = {
               if (done) break;
 
               const text = decoder.decode(value, { stream: true });
-              log("Received chunk:", text ? text.substring(0, 20) + '...' : 'empty');
               fullContent += text;
               onChunk(text);
               streamingSuccessful = true;
             }
           } else if (typeof streamResponse === 'string') {
-            log("Received string response");
             fullContent = streamResponse;
             onChunk(streamResponse);
             streamingSuccessful = true;
           } else if ((streamResponse as any).text) {
-            log("Using response.text property");
             fullContent = (streamResponse as any).text;
             onChunk(fullContent);
             streamingSuccessful = true;
           } else if ((streamResponse as any).content) {
-            log("Using response.content property");
             fullContent = (streamResponse as any).content;
             onChunk(fullContent);
             streamingSuccessful = true;
           } else {
-            log("Falling back to JSON.stringify");
             const stringified = JSON.stringify(streamResponse);
             fullContent = stringified;
             onChunk(stringified);
@@ -188,23 +166,18 @@ const weatherAgentService = {
           streamError.toString && 
           streamError.toString().includes("No response body");
 
-        if (isNoResponseBodyError) {
-          log("Stream not supported on this server, using regular generate instead");
-        } else {
+        if (!isNoResponseBodyError) {
           logError("Error in streaming:", streamError);
         }
       }
 
       if (!streamingSuccessful) {
-        log("Falling back to regular generate method");
-
         try {
           const response = await agent.generate({
             messages: [
               { role: 'user', content }
             ]
           });
-          log("Fallback response received:", response);
 
           const responseText = typeof response === 'string' 
             ? response 
@@ -217,8 +190,6 @@ const weatherAgentService = {
           throw generateError;
         }
       }
-
-      log("Message handling completed, content length:", fullContent.length);
 
       if (!fullContent) {
         const defaultMessage = "I'm sorry, I couldn't generate a response for your query.";
@@ -246,7 +217,6 @@ const weatherAgentService = {
   }
 };
 
-// Initialize the client on import
-weatherAgentService.refreshClient();
+mastraAgentService.refreshClient();
 
-export default weatherAgentService;
+export default mastraAgentService;

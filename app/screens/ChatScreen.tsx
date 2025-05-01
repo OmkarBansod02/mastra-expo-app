@@ -4,7 +4,7 @@ import { Appbar, Text, Divider, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import ChatMessage from '../components/ChatMessage';
 import ChatInput from '../components/ChatInput';
-import personalAssistantService, { Message } from '../services/assistantService';
+import mastraAgentService, { Message } from '../services/assistantService';
 import theme from '../utils/theme';
 
 const mastraLogo = require('../../assets/mastra-logo.jpeg');
@@ -19,8 +19,8 @@ const ChatScreen: React.FC = () => {
   // Check connection status and refresh it when component mounts or comes into focus
   useEffect(() => {
     const checkConnection = async () => {
-      await personalAssistantService.refreshClient();
-      const isConfigured = personalAssistantService.isConfigured();
+      await mastraAgentService.refreshClient();
+      const isConfigured = mastraAgentService.isConfigured();
       setIsConnected(isConfigured);
 
       const initialMessage: Message = {
@@ -74,7 +74,7 @@ const ChatScreen: React.FC = () => {
     try {
       let hasReceivedContent = false;
       
-      await personalAssistantService.streamMessage(
+      await mastraAgentService.streamMessage(
         content, 
         (chunk) => {
           setMessages(prevMessages => 
