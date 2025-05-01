@@ -1,5 +1,34 @@
-// Theme colors similar to ChatGPT's dark theme
-export const colors = {
+import { DefaultTheme } from 'react-native-paper';
+
+// Spacing values
+const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+// Typography values
+const typography = {
+  fontSize: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
+  },
+  fontWeight: {
+    normal: 'normal' as const,
+    medium: '500' as const,
+    bold: 'bold' as const,
+  },
+};
+
+// Colors
+const colors = {
   // Main theme colors
   background: '#343541',        // Main background
   secondaryBackground: '#444654', // Secondary/alternating background
@@ -10,6 +39,8 @@ export const colors = {
   primaryText: '#FFFFFF',       // Main text color
   secondaryText: '#ECECF1',     // Secondary text color
   tertiaryText: '#9CA3AF',      // Less important text
+  userText: '#FFFFFF',          // User message text color - white for better contrast
+  assistantText: '#FFFFFF',     // Assistant message text color
   
   // UI element colors
   accent: '#10A37F',            // Primary accent (buttons, highlights) - ChatGPT green
@@ -18,51 +49,29 @@ export const colors = {
   divider: '#4D4D4F',           // Dividers and separators
   
   // Message bubble colors
-  userBubble: '#343541',        // User message bubble
-  assistantBubble: '#444654',   // Assistant message bubble
+  userBubble: '#1E8870',        // Darker green for user bubbles (improved contrast with white text)
+  assistantBubble: '#444654',   // Assistant message bubble (dark gray)
   
   // Status colors
   error: '#EF4444',             // Error messages
   warning: '#F59E0B',           // Warnings
   success: '#10A37F',           // Success messages
+  info: '#2196F3',              // Info messages
   
   // Misc
   overlay: 'rgba(52, 53, 65, 0.7)', // Overlay for modals
   loadingIndicator: '#10A37F',   // Loading spinner color
 };
 
-// Typography
-export const typography = {
-  fontFamily: {
-    regular: 'System',
-    medium: 'System',
-    bold: 'System',
-  },
-  fontSize: {
-    xs: 10,
-    sm: 12,
-    md: 14,
-    lg: 16,
-    xl: 18,
-    xxl: 24,
-  },
-};
-
-// Spacing
-export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
-};
-
 // Combined theme object
-export const theme = {
-  colors,
-  typography,
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    ...colors,
+  },
   spacing,
+  typography,
 };
 
 export default theme;

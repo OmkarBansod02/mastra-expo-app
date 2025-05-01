@@ -1,5 +1,6 @@
 import { MastraClient } from '@mastra/client-js';
-import { personalAssistantUrl, mastraAgentId, log, logError } from '../utils/config';
+import { log, logError } from '../utils/config';
+import { loadMastraConfig, MastraConfig } from '../utils/configStorage';
 
 export interface Message {
   id: string;
@@ -8,17 +9,75 @@ export interface Message {
   timestamp: Date;
 }
 
-const client = new MastraClient({
-  baseUrl: personalAssistantUrl,
-});
-
-const agent = client.getAgent(mastraAgentId);
+// Initialize with null values, will be set when refreshClient is called
+let client: any = null;
+let agent: any = null;
+let isInitialized = false;
 
 const weatherAgentService = {
-  isConfigured: () => !!agent,
-
+  // Initialize the client and agent with current settings
+  refreshClient: async (): Promise<boolean> => {
+    try {
+      const config = await loadMastraConfig();
+      log("Initializing Mastra client with config:", config);
+      
+      if (!config.baseUrl) {
+        logError("No Mastra URL configured");
+        client = null;
+        agent = null;
+        isInitialized = false;
+        return false;
+      }
+      
+      // Create new client with current settings
+      client = new MastraClient({
+        baseUrl: config.baseUrl,
+      });
+      
+      // Get the agent with current agent ID
+      agent = client.getAgent(config.agentId);
+      isInitialized = true;
+      
+      log("Mastra client initialized successfully");
+      return true;
+    } catch (error) {
+      logError("Error initializing Mastra client:", error);
+      client = null;
+      agent = null;
+      isInitialized = false;
+      return false;
+    }
+  },
+  
+  isConfigured: (): boolean => {
+    // If not yet initialized, try to initialize now
+    if (!isInitialized) {
+      // We need to initialize but can't await in a sync function
+      // So we trigger the initialization asynchronously and return false for now
+      weatherAgentService.refreshClient()
+        .then((success) => {
+          isInitialized = success;
+        })
+        .catch(() => {
+          isInitialized = false;
+        });
+      return false;
+    }
+    
+    return !!agent;
+  },
+  
   sendMessage: async (content: string): Promise<Message> => {
     try {
+      // Make sure client is initialized
+      if (!isInitialized) {
+        await weatherAgentService.refreshClient();
+        
+        if (!agent) {
+          throw new Error("Mastra client not properly configured");
+        }
+      }
+      
       log("Sending message to agent");
       const response = await agent.generate({
         messages: [
@@ -48,6 +107,15 @@ const weatherAgentService = {
 
   streamMessage: async (content: string, onChunk: (chunk: string) => void): Promise<Message> => {
     try {
+      // Make sure client is initialized
+      if (!isInitialized) {
+        await weatherAgentService.refreshClient();
+        
+        if (!agent) {
+          throw new Error("Mastra client not properly configured");
+        }
+      }
+      
       log("Streaming message to agent");
       let fullContent = '';
       let streamingSuccessful = false;
@@ -177,5 +245,8 @@ const weatherAgentService = {
     }
   }
 };
+
+// Initialize the client on import
+weatherAgentService.refreshClient();
 
 export default weatherAgentService;

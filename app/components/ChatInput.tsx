@@ -26,7 +26,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading = false 
       <View style={styles.container}>
         <TextInput
           mode="outlined"
-          placeholder="Message the assistant..."
+          placeholder="Message the agent..."
           value={message}
           onChangeText={setMessage}
           style={styles.input}
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   outlineStyle: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderColor: theme.colors.border,
   },
   sendButton: {

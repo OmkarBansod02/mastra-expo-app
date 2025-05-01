@@ -3,14 +3,13 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Appbar, TextInput, Button, Divider, Text, Switch, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { loadMastraConfig, saveMastraConfig, MastraConfig } from '../utils/configStorage';
-import mastraService from '../services/mastraService';
+import personalAssistantService from '../services/assistantService';
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const theme = useTheme();
   
   const [mastraUrl, setMastraUrl] = useState('');
-  const [mastraApiKey, setMastraApiKey] = useState('');
   const [mastraAgentId, setMastraAgentId] = useState('');
   const [enableNotifications, setEnableNotifications] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,7 +21,6 @@ const SettingsScreen: React.FC = () => {
       try {
         const config = await loadMastraConfig();
         setMastraUrl(config.baseUrl);
-        setMastraApiKey(config.apiKey);
         setMastraAgentId(config.agentId);
         setLoading(false);
       } catch (error) {
@@ -41,11 +39,6 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    if (!mastraApiKey) {
-      Alert.alert('Error', 'Mastra API Key is required');
-      return;
-    }
-
     if (!mastraAgentId) {
       Alert.alert('Error', 'Mastra Agent ID is required');
       return;
@@ -57,14 +50,14 @@ const SettingsScreen: React.FC = () => {
       // Save configuration
       const config: MastraConfig = {
         baseUrl: mastraUrl,
-        apiKey: mastraApiKey,
+        apiKey: '',  // API key is not used in the current implementation
         agentId: mastraAgentId
       };
       
       await saveMastraConfig(config);
       
       // Refresh the Mastra client with new settings
-      await mastraService.refreshClient();
+      await personalAssistantService.refreshClient();
       
       Alert.alert('Success', 'Settings saved successfully');
       navigation.goBack();
@@ -92,9 +85,9 @@ const SettingsScreen: React.FC = () => {
       </Appbar.Header>
       
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>Mastra Cloud Configuration</Text>
+        <Text style={styles.sectionTitle}>Mastra AI Agent Configuration</Text>
         <Text style={styles.sectionDescription}>
-          Configure your connection to the Mastra personal assistant deployed on Mastra Cloud.
+          Configure your connection to any AI agent deployed on the Mastra Cloud platform.
         </Text>
         
         <TextInput
@@ -109,23 +102,12 @@ const SettingsScreen: React.FC = () => {
         />
         
         <TextInput
-          label="Mastra API Key"
-          value={mastraApiKey}
-          onChangeText={setMastraApiKey}
-          mode="outlined"
-          style={styles.input}
-          placeholder="Enter your Mastra API Key"
-          autoCapitalize="none"
-          secureTextEntry
-        />
-        
-        <TextInput
           label="Agent ID"
           value={mastraAgentId}
           onChangeText={setMastraAgentId}
           mode="outlined"
           style={styles.input}
-          placeholder="personal-assistant"
+          placeholder="Enter Agent ID"
           autoCapitalize="none"
         />
         
@@ -154,8 +136,8 @@ const SettingsScreen: React.FC = () => {
         </View>
         
         <Text style={styles.hint}>
-          Note: You'll need to get your Mastra Cloud URL, API Key, and Agent ID from your Mastra Cloud
-          administrator.
+          Enter the Mastra Cloud URL and Agent ID to connect to any AI agent deployed on your Mastra Cloud instance.
+          Different agents provide different capabilities (e.g., weather information, financial advice, customer support).
         </Text>
       </ScrollView>
     </View>

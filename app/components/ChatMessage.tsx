@@ -28,27 +28,23 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isThinking = false, 
     ? `Assistant is thinking${dots}` 
     : message.content;
 
+  const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
   return (
     <View style={[
       styles.container,
       isUser ? styles.userContainer : styles.assistantContainer
     ]}>
-      {!isUser && (
-        logoSource ? (
-          <View style={styles.logoContainer}>
-            <Image 
-              source={logoSource}
-              style={styles.logo}
-            />
-          </View>
-        ) : (
-          <Avatar.Icon 
-            size={36} 
-            icon="robot" 
-            style={[styles.avatar, { backgroundColor: theme.colors.accent }]}
-            color={theme.colors.primaryText}
+      {!isUser && logoSource && (
+        <View style={styles.logoContainer}>
+          <Image 
+            source={logoSource}
+            style={styles.logo}
           />
-        )
+        </View>
       )}
       
       <Surface style={[
@@ -75,11 +71,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isThinking = false, 
             {messageContent}
           </Text>
         )}
+        
         <Text style={[
           styles.timestamp,
           isUser ? styles.userTimestamp : styles.assistantTimestamp
         ]}>
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {formattedTime}
         </Text>
       </Surface>
       
@@ -98,7 +95,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isThinking = false, 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     marginVertical: theme.spacing.md,
     maxWidth: '95%',
     alignItems: 'flex-end',
@@ -112,6 +109,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     marginBottom: 4,
+    marginHorizontal: 4,
   },
   logoContainer: {
     width: 36,
@@ -119,6 +117,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 4,
+    marginHorizontal: 4,
   },
   logo: {
     width: 36,
@@ -126,21 +125,17 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   messageBubble: {
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
+    padding: theme.spacing.md,
+    borderRadius: theme.spacing.md,
     elevation: 0,
-    marginHorizontal: theme.spacing.md,
+    marginHorizontal: theme.spacing.sm,
     maxWidth: '80%',
   },
   userBubble: {
     backgroundColor: theme.colors.userBubble,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
   },
   assistantBubble: {
     backgroundColor: theme.colors.assistantBubble,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
   },
   thinkingBubble: {
     backgroundColor: theme.colors.assistantBubble,
@@ -148,14 +143,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   messageText: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.md,
     lineHeight: 24,
   },
   userText: {
-    color: theme.colors.primaryText,
+    color: theme.colors.userText,
   },
   assistantText: {
-    color: theme.colors.primaryText,
+    color: theme.colors.assistantText,
   },
   timestamp: {
     fontSize: theme.typography.fontSize.xs,

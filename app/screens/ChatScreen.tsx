@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, FlatList, SafeAreaView, StatusBar, Image } from 'react-native';
-import { Appbar, Text, Divider } from 'react-native-paper';
+import { Appbar, Text, Divider, IconButton } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import ChatMessage from '../components/ChatMessage';
 import ChatInput from '../components/ChatInput';
 import personalAssistantService, { Message } from '../services/assistantService';
@@ -13,22 +14,36 @@ const ChatScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const navigation = useNavigation();
 
+  // Check connection status and refresh it when component mounts or comes into focus
   useEffect(() => {
-    const isConfigured = personalAssistantService.isConfigured();
-    setIsConnected(isConfigured);
+    const checkConnection = async () => {
+      await personalAssistantService.refreshClient();
+      const isConfigured = personalAssistantService.isConfigured();
+      setIsConnected(isConfigured);
 
-    const initialMessage: Message = {
-      id: '0',
-      role: 'assistant',
-      content: isConfigured 
-        ? 'Hello! I\'m your weather assistant. How can I help you today?'
-        : 'The app is not properly configured. Please make sure your PERSONAL_ASSISTANT_URL environment variable is set correctly in the .env file.',
-      timestamp: new Date(),
+      const initialMessage: Message = {
+        id: '0',
+        role: 'assistant',
+        content: isConfigured 
+          ? 'Hello! I\'m your Mastra AI assistant. How can I help you today?'
+          : 'The app is not properly configured. Please tap the settings icon in the top-right corner to configure your Mastra Cloud URL and Agent ID.',
+        timestamp: new Date(),
+      };
+      
+      setMessages([initialMessage]);
     };
     
-    setMessages([initialMessage]);
-  }, []);
+    checkConnection();
+    
+    // Set up a listener for when the screen is focused (coming back from settings)
+    const unsubscribe = navigation.addListener('focus', () => {
+      checkConnection();
+    });
+    
+    return unsubscribe;
+  }, [navigation]);
 
   const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
@@ -90,7 +105,7 @@ const ChatScreen: React.FC = () => {
           msg.id === assistantMessageId.toString()
             ? { 
                 ...msg, 
-                content: 'Sorry, I encountered an error. Please check your connection and try again.' 
+                content: 'Sorry, I encountered an error. Please check your connection settings and try again.' 
               }
             : msg
         )
@@ -98,6 +113,10 @@ const ChatScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const navigateToSettings = () => {
+    navigation.navigate('Settings' as never);
   };
 
   const getMessageDate = (timestamp: Date) => {
@@ -148,7 +167,7 @@ const ChatScreen: React.FC = () => {
           </View>
           
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Mastra Weather</Text>
+            <Text style={styles.headerTitle}>Mastra AI Agent</Text>
             <Text style={[
               styles.connectionStatus,
               isConnected ? styles.connectedStatus : styles.disconnectedStatus
@@ -156,6 +175,14 @@ const ChatScreen: React.FC = () => {
               {isConnected ? 'Online' : 'Offline'}
             </Text>
           </View>
+          
+          <IconButton
+            icon="cog"
+            iconColor={theme.colors.primaryText}
+            size={24}
+            onPress={navigateToSettings}
+            style={styles.settingsButton}
+          />
         </Appbar.Header>
         
         <FlatList
@@ -222,6 +249,9 @@ const styles = StyleSheet.create({
   },
   disconnectedStatus: {
     color: theme.colors.error,
+  },
+  settingsButton: {
+    margin: 0,
   },
   flatList: {
     flex: 1,
