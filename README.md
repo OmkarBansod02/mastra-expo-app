@@ -1,129 +1,36 @@
-# Mastra Personal Assistant Mobile App
+# Mastra Mobile App
 
-A mobile application built with Expo/React Native that connects to a Mastra personal assistant deployed on Mastra Cloud.
-
-## Features
-
-- Chat interface to interact with your Mastra personal assistant
-- Connection status indicator
-- Settings screen to configure Mastra Cloud URL, API Key, and Agent ID
-- Modern, mobile-friendly UI with message bubbles, avatars, and date headers
-- Persistent configuration storage using AsyncStorage
-
-## For Managers/Administrators
-
-This app is designed to be a plug-and-play client for the [Mastra Personal Assistant Example](https://github.com/mastra-ai/personal-assistant-example) deployed on Mastra Cloud. The app requires **three key pieces** of information to connect to your deployed assistant:
-
-1. **Mastra Cloud URL**: The URL of your Mastra Cloud instance (e.g., `https://api.mastra.ai`)
-2. **Mastra API Key**: The API key for authentication with Mastra Cloud
-3. **Agent ID**: The ID of the personal assistant agent (typically `personal-assistant`)
-
-To configure the app:
-1. Open the app
-2. Tap the settings icon in the top-right corner
-3. Enter the three required values
-4. Tap "Save Settings"
-
-Once configured, the app will connect to your Mastra personal assistant and users can start chatting right away.
+A React Native mobile app that connects to the Mastra AI agent.
 
 ## Prerequisites
 
-- Node.js (v14 or newer)
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- Expo Go app on your mobile device for testing
+- Node.js (v18 or newer)
+- npm
+- Expo Go app on your mobile device
 
-## Getting Started
+## Running the App Locally
 
-1. **Clone this repository**
-    ```sh
-    git clone <your-repo-url>
-    cd Mastra-Mobile
-    ```
-2. **Install dependencies**
-    ```sh
-    npm install
-    # or
-    yarn install
-    ```
-3. **Configure environment variables**
-    - Copy `.env.example` to `.env` and fill in the required values:
-      - `PERSONAL_ASSISTANT_URL` (e.g. https://api.mastra.ai)
-      - `ENABLE_LOGGING` (optional, set to `true` for debug logs)
-    ```sh
-    cp .env.example .env
-    # Edit .env as needed
-    ```
-4. **Start the development server**
-    ```sh
-    npx expo start
-    ```
-5. **Run the app on your device**
-    - Install the Expo Go app from the App Store or Google Play
-    - Scan the QR code from the terminal or browser with Expo Go
+### 1. Clone the Repository
+```bash
+git clone https://github.com/OmkarBansod02/mastra-expo-app.git
+cd mastra-expo-app
+```
 
-## Useful Commands
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-- Install Expo CLI (if not already installed):
-  ```sh
-  npm install -g expo-cli
-  ```
-- Start the app:
-  ```sh
-  npx expo start
-  ```
-- Run on Android emulator:
-  ```sh
-  npx expo start --android
-  ```
-- Run on iOS simulator:
-  ```sh
-  npx expo start --ios
-  ```
+### 3. Configuration
 
-## Technical Details
+You'll need to configure your Mastra Cloud URL and Agent ID in the app settings when you first launch it.
 
-This app uses the Mastra Client JS SDK to communicate with the Mastra personal assistant. The connection process works as follows:
+### 4. Start the App
+```bash
+npx expo start
+```
 
-1. The app initializes the Mastra client with the configured URL and API key.
-2. The client gets a reference to the agent using the configured agent ID.
-3. When a user sends a message, the app calls `agent.generate()` to get a response.
-
-Configuration is securely stored using AsyncStorage and loaded when the app starts.
-
-## Project Structure
-
-- `/app` - Main application code
-  - `/components` - Reusable UI components
-    - `ChatMessage.tsx` - Message bubble component
-    - `ChatInput.tsx` - Input field and send button
-    - `ConnectionStatus.tsx` - Connection status indicator
-  - `/screens` - App screens
-    - `ChatScreen.tsx` - Main chat interface
-    - `SettingsScreen.tsx` - Configuration settings
-  - `/services` - Service layer
-    - `mastraService.ts` - Mastra client integration
-  - `/utils` - Utility functions
-    - `configStorage.ts` - Configuration management
-  - `/navigation.tsx` - Navigation setup
-
-## Technologies Used
-
-- Expo/React Native - Cross-platform mobile framework
-- React Navigation - Navigation library
-- React Native Paper - Material Design components
-- Mastra Client JS - Official client for connecting to Mastra Cloud
-- AsyncStorage - Persistent storage
-
-## Troubleshooting
-- If you encounter issues with dependencies, try deleting `node_modules` and running `npm install` or `yarn install` again.
-- Make sure your `.env` file is correctly set up with the right Mastra Cloud URL.
-- For Expo issues, refer to the [Expo documentation](https://docs.expo.dev/).
-
----
-
-Enjoy your Mastra-powered mobile assistant!
-
-## License
-
-MIT
+### 5. Run on Your Device
+- Install Expo Go app on your iOS or Android device
+- Scan the QR code from the terminal with your camera app
+- The app will open in Expo Go
