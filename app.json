@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MastraPersonalAssistant",
-    "slug": "MastraPersonalAssistant",
+    "name": "Mastra AI Agent",
+    "slug": "MastraAIAgent",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
