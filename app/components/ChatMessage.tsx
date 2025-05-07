@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Image, ImageSourcePropType } from 'react-native';
 import { Text, Surface, Avatar } from 'react-native-paper';
-import { Message } from '../services/assistantService';
+import { Message } from '../services/mastraService';
 import theme from '../utils/theme';
 
 interface ChatMessageProps {

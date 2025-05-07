@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Appbar, TextInput, Button, Divider, Text, Switch, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { loadMastraConfig, saveMastraConfig, MastraConfig } from '../utils/configStorage';
-import mastraAgentService from '../services/assistantService';
+import mastraAgentService from '../services/mastraService';
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();

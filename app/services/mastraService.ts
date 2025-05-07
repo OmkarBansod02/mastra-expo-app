@@ -4,70 +4,59 @@ import { loadMastraConfig } from '../utils/configStorage';
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant';
   content: string;
+  role: 'user' | 'assistant';
   timestamp: Date;
 }
 
-let client: any = null;
-let agent: any = null;
-let isInitialized = false;
-
 const mastraAgentService = {
-  refreshClient: async (): Promise<boolean> => {
+  client: null as any,
+  agent: null as any,
+  connected: false,
+  
+  async refreshClient() {
     try {
       const config = await loadMastraConfig();
       
-      if (!config.baseUrl) {
-        client = null;
-        agent = null;
-        isInitialized = false;
+      if (!config.baseUrl || !config.agentId) {
+        this.connected = false;
         return false;
       }
       
-      client = new MastraClient({
+      this.client = new MastraClient({
         baseUrl: config.baseUrl,
       });
       
-      agent = client.getAgent(config.agentId);
-      isInitialized = true;
-      
+      this.agent = this.client.getAgent(config.agentId);
+      this.connected = true;
       return true;
     } catch (error) {
       logError("Error initializing Mastra client:", error);
-      client = null;
-      agent = null;
-      isInitialized = false;
+      this.client = null;
+      this.agent = null;
+      this.connected = false;
       return false;
     }
   },
   
-  isConfigured: (): boolean => {
-    if (!isInitialized) {
-      mastraAgentService.refreshClient()
-        .then((success) => {
-          isInitialized = success;
-        })
-        .catch(() => {
-          isInitialized = false;
-        });
-      return false;
+  async ensureInitialized() {
+    if (!this.client || !this.agent) {
+      return await this.refreshClient();
     }
-    
-    return !!agent;
+    return true;
   },
   
-  sendMessage: async (content: string): Promise<Message> => {
+  isConfigured() {
+    return this.connected;
+  },
+  
+  async sendMessage(content: string): Promise<Message> {
     try {
-      if (!isInitialized) {
-        await mastraAgentService.refreshClient();
-        
-        if (!agent) {
-          throw new Error("Mastra client not properly configured");
-        }
+      if (!await this.ensureInitialized()) {
+        throw new Error("Mastra client not properly configured");
       }
       
-      const response = await agent.generate({
+      const response = await this.agent.generate({
         messages: [
           { role: 'user', content }
         ]
@@ -77,38 +66,24 @@ const mastraAgentService = {
         ? response 
         : (response as any).text || JSON.stringify(response);
       
-      return {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: responseText,
-        timestamp: new Date(),
-      };
+      return this.formatMessage('assistant', responseText);
     } catch (error) {
       logError('Error sending message:', error);
-      return {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: "Sorry, I couldn't process your request. Please try again.",
-        timestamp: new Date(),
-      };
+      return this.formatMessage('assistant', "Sorry, I couldn't process your request. Please try again.");
     }
   },
 
-  streamMessage: async (content: string, onChunk: (chunk: string) => void): Promise<Message> => {
+  async streamMessage(content: string, onChunk: (chunk: string) => void): Promise<Message> {
     try {
-      if (!isInitialized) {
-        await mastraAgentService.refreshClient();
-        
-        if (!agent) {
-          throw new Error("Mastra client not properly configured");
-        }
+      if (!await this.ensureInitialized()) {
+        throw new Error("Mastra client not properly configured");
       }
       
       let fullContent = '';
       let streamingSuccessful = false;
 
       try {
-        const streamResponse = await agent.stream({
+        const streamResponse = await this.agent.stream({
           messages: [
             { role: 'user', content }
           ]
@@ -171,9 +146,10 @@ const mastraAgentService = {
         }
       }
 
+      // Fall back to non-streaming if streaming failed
       if (!streamingSuccessful) {
         try {
-          const response = await agent.generate({
+          const response = await this.agent.generate({
             messages: [
               { role: 'user', content }
             ]
@@ -197,26 +173,45 @@ const mastraAgentService = {
         onChunk(defaultMessage);
       }
 
-      return {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: fullContent,
-        timestamp: new Date(),
-      };
+      return this.formatMessage('assistant', fullContent);
     } catch (error) {
       logError('Error handling message:', error);
       const errorMessage = "Sorry, I couldn't process your request. Please try again.";
       onChunk(errorMessage);
-      return {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: errorMessage,
-        timestamp: new Date(),
-      };
+      return this.formatMessage('assistant', errorMessage);
+    }
+  },
+  
+  formatMessage(role: 'user' | 'assistant', content: string): Message {
+    return {
+      id: Date.now().toString(),
+      content,
+      role,
+      timestamp: new Date(),
+    };
+  },
+  
+  async testConnection(): Promise<boolean> {
+    try {
+      if (!await this.ensureInitialized()) {
+        return false;
+      }
+
+      // Send a simple test message
+      await this.agent.generate({
+        messages: [{ role: "user", content: "Test connection" }]
+      });
+      
+      this.connected = true;
+      return true;
+    } catch (error) {
+      this.connected = false;
+      return false;
     }
   }
 };
 
+// Initialize on import
 mastraAgentService.refreshClient();
 
 export default mastraAgentService;

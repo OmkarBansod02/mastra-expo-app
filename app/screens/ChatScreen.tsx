@@ -4,7 +4,7 @@ import { Appbar, Text, Divider, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import ChatMessage from '../components/ChatMessage';
 import ChatInput from '../components/ChatInput';
-import mastraAgentService, { Message } from '../services/assistantService';
+import mastraAgentService, { Message } from '../services/mastraService';
 import theme from '../utils/theme';
 
 const mastraLogo = require('../../assets/mastra-logo.jpeg');
